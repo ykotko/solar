@@ -63,9 +63,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.vm.provision "shell", inline: master_celery, privileged: true
     config.vm.provision "file", source: "~/.vagrant.d/insecure_private_key", destination: "/vagrant/tmp/keys/ssh_private"
     config.vm.provision "file", source: "bootstrap/ansible.cfg", destination: "/home/vagrant/.ansible.cfg"
-    MASTER_IPS.each do |ip|
-      config.vm.network "private_network", ip: "#{ip}"
-    end
     config.vm.host_name = "solar-dev"
 
     config.vm.provider :virtualbox do |v|
@@ -77,10 +74,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         "--cpus", MASTER_CPUS,
         "--ioapic", "on",
       ]
+
       if PARAVIRT_PROVIDER
         v.customize ['modifyvm', :id, "--paravirtprovider", PARAVIRT_PROVIDER] # for linux guest
       end
-      v.name = "solar-dev"
     end
 
     config.vm.provider :libvirt do |libvirt|
@@ -106,15 +103,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     ip_index = i + 3
     config.vm.define "solar-dev#{index}" do |config|
       # standard box with all stuff preinstalled
+      config.vm.box = "cgenie/solar-master"
       config.vm.box = SLAVES_IMAGE
 
       config.vm.provision "file", source: "bootstrap/ansible.cfg", destination: "/home/vagrant/.ansible.cfg"
       config.vm.provision "shell", inline: slave_script, privileged: true
       config.vm.provision "shell", inline: solar_script, privileged: true
       config.vm.provision "shell", inline: slave_celery, privileged: true
-      SLAVES_IPS.each do |ip|
-        config.vm.network "private_network", ip: "#{ip}#{ip_index}"
-      end
       config.vm.host_name = "solar-dev#{index}"
 
       config.vm.provider :virtualbox do |v|
@@ -124,10 +119,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             "--cpus", SLAVES_CPUS,
             "--ioapic", "on",
         ]
+
         if PARAVIRT_PROVIDER
           v.customize ['modifyvm', :id, "--paravirtprovider", PARAVIRT_PROVIDER] # for linux guest
         end
-        v.name = "solar-dev#{index}"
       end
 
       config.vm.provider :libvirt do |libvirt|
