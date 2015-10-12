@@ -2,15 +2,53 @@
   "variables": {
     "ansible_config_path": "/etc/ansible",
     "ansible_config_file": "ansible.cfg",
-    "ansible_log_file": "/var/tmp/ansible.log"
+    "ansible_log_file": "/var/tmp/ansible.log",
+    "user": "vagrant",
+    "password": "vagrant",
+    "disk_size": "100000"
   },
-  "builders": [{
-    "type": "virtualbox-ovf",
-    "source_path": "trusty64/box.ovf",
-    "ssh_username": "vagrant",
-    "ssh_password": "vagrant",
-    "shutdown_command": "echo 'vagrant' | sudo -S shutdown -P now"
-  }],
+  "builders": [
+    {
+      "name": "master-kvm",
+      "vm_name" : "master.img",
+      "type": "qemu",
+      "format": "qcow2",
+      "accelerator": "kvm",
+      "disk_size": "100000",
+      "ssh_wait_timeout": "1200s",
+
+      "iso_url": "http://releases.ubuntu.com/14.04/ubuntu-14.04.3-server-amd64.iso",
+      "iso_checksum": "9e5fecc94b3925bededed0fdca1bd417",
+      "iso_checksum_type": "md5",
+      "ssh_pty" : "true",
+
+      "http_directory": "http",
+      "output_directory": "qcow",
+
+      "ssh_username": "{{user `user`}}",
+      "ssh_password": "{{user `password`}}",
+      "shutdown_command": "echo '{{user `password`}}'|sudo -S shutdown -P now",
+
+      "boot_wait": "2s",
+      "boot_command": [
+        "<esc><esc><enter><wait>",
+        "/install/vmlinuz url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg ",
+        "debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
+        "hostname={{ .Name }} ",
+
+        "keyboard-configuration/modelcode=SKIP ",
+        "keyboard-configuration/layout=USA ",
+        "keyboard-configuration/variant=USA ",
+
+        "passwd/user-fullname={{user `user`}} ",
+        "passwd/user-password-again={{user `password`}} ",
+        "passwd/user-password={{user `password`}} ",
+        "passwd/username={{user `user`}} ",
+
+        "initrd=/install/initrd.gz -- <enter>"
+      ]
+    }
+  ],
   "provisioners": [
     {
       "type": "shell",
@@ -41,9 +79,6 @@
       "playbook_dir": "playbooks",
       "playbook_file": "playbooks/build-main.yaml",
       "extra_arguments": ["--verbose"]
-    }],
-  "post-processors": [{
-    "type": "vagrant",
-    "output": "solar-master.box"
-  }]
+    }]
 }
+
