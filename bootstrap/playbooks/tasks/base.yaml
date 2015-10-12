@@ -29,6 +29,10 @@
   - python-virtualenv
   # Required by packer
   - build-essential
+  - gcc
+  - python-crypto 
+  - python-dev 
+  - software-properties-common
 
 # PIP
 #- apt: name=python-pip state=absent
