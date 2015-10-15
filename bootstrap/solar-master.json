@@ -86,6 +86,11 @@
       "playbook_dir": "playbooks",
       "playbook_file": "playbooks/build-main.yaml",
       "extra_arguments": ["--verbose"]
-    }]
+    }],
+     "post-processors": [{
+     "only": ["master-vagrant"],
+     "type": "vagrant",
+     "output": "solar-master.box"
+  }]
 }
 
